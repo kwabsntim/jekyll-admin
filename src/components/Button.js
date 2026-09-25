@@ -11,6 +11,7 @@ const iconMap = {
   delete: 'trash',
   publish: 'send-o',
   save: 'save',
+  saveDraft: 'pencil',
   upload: 'upload',
   view: 'eye',
 };
@@ -29,7 +30,7 @@ export default function Button({
     'btn-active': active,
     'btn-success': active && (type === 'save' || type === 'create'),
     'btn-delete': type === 'delete',
-    'btn-view': type === 'view' || type === 'publish',
+    'btn-view': type === 'view' || type === 'publish' || type === 'saveDraft',
     'btn-inactive': !active,
     'btn-fat': block,
     'btn-thin': thin,
@@ -50,6 +51,7 @@ export default function Button({
     case 'delete':
     case 'upload':
     case 'publish':
+    case 'saveDraft':
       label = labels[type].label;
       break;
     default:

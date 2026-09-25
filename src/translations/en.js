@@ -80,4 +80,10 @@ export const labels = {
     label: 'Switch View to GUI Editor',
     triggeredLabel: 'Switch View to Raw Editor',
   },
+  saveDraft: {
+    label: 'Save as Draft',
+  },
+  grammarCheck: {
+    label: 'Check Grammar',
+  },
 };

@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import SimpleMDE from 'simplemde';
 import hljs from '../utils/highlighter';
 import FilePicker from './FilePicker';
+import GrammarChecker from './GrammarChecker';
 import { getExtensionFromPath } from '../utils/helpers';
 
 const classNames = [
@@ -13,23 +14,40 @@ const classNames = [
 ];
 
 class MarkdownEditor extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      showGrammarChecker: false,
+    };
+  }
+
   componentDidMount() {
     this.create();
     window.hljs = hljs; // TODO: fix this after the next release of SimpleMDE
   }
 
-  shouldComponentUpdate(nextProps) {
-    return nextProps.initialValue !== this.props.initialValue;
+  shouldComponentUpdate(nextProps, nextState) {
+    return (
+      nextProps.initialValue !== this.props.initialValue ||
+      nextState.showGrammarChecker !== this.state.showGrammarChecker
+    );
   }
 
-  componentDidUpdate() {
-    this.destroy();
-    this.create();
+  componentDidUpdate(prevProps) {
+    // only recreate the editor when initialValue changes, not on grammar panel toggle
+    if (prevProps.initialValue !== this.props.initialValue) {
+      this.destroy();
+      this.create();
+    }
   }
 
   componentWillUnmount() {
     this.destroy();
   }
+
+  toggleGrammarChecker = () => {
+    this.setState(prev => ({ showGrammarChecker: !prev.showGrammarChecker }));
+  };
 
   create() {
     const { onChange, onSave } = this.props;
@@ -67,6 +85,12 @@ class MarkdownEditor extends Component {
       'side-by-side',
       'fullscreen',
       '|',
+      {
+        name: 'grammarCheck',
+        action: () => this.toggleGrammarChecker(),
+        className: 'fa fa-check-circle',
+        title: 'Check Grammar & Spelling',
+      },
     ];
     if (onSave) {
       toolbarIcons.push({
@@ -127,7 +151,54 @@ class MarkdownEditor extends Component {
     this._replaceSelectedText(codemirror, type, url);
   };
 
+  getCurrentContent() {
+    return this.editor ? this.editor.value() : this.props.initialValue;
+  }
+
+  // Jump CodeMirror cursor to the character offset LanguageTool reported,
+  // then select the word so the user can see exactly what needs fixing.
+  handleJumpTo = (offset, length) => {
+    if (!this.editor || !this.editor.codemirror) return;
+
+    const cm = this.editor.codemirror;
+    const content = this.getCurrentContent();
+
+    // Strip the same markdown we strip before sending to LanguageTool so the
+    // offset lines up. We search for the plain-text word in the raw markdown.
+    const plainText = content
+      .replace(/```[\s\S]*?```/g, '')
+      .replace(/`[^`]*`/g, '')
+      .replace(/!\[.*?\]\(.*?\)/g, '')
+      .replace(/\[.*?\]\(.*?\)/g, '')
+      .replace(/#{1,6}\s/g, '')
+      .replace(/(\*\*|__)(.*?)\1/g, '$2')
+      .replace(/(\*|_)(.*?)\1/g, '$2')
+      .replace(/^\s*[-*+]\s/gm, '')
+      .replace(/^\s*\d+\.\s/gm, '')
+      .replace(/>\s/g, '')
+      .trim();
+
+    // Get the word at the offset in plain text
+    const errorWord = plainText.substring(offset, offset + length);
+    if (!errorWord) return;
+
+    // Search for this word in the raw markdown content
+    const rawIndex = content.indexOf(errorWord);
+    if (rawIndex === -1) return;
+
+    // Convert flat character index to CodeMirror {line, ch} position
+    const from = cm.posFromIndex(rawIndex);
+    const to = cm.posFromIndex(rawIndex + errorWord.length);
+
+    // Move cursor, select the word, and scroll it into view
+    cm.setSelection(from, to);
+    cm.scrollIntoView({ from, to }, 100);
+    cm.focus();
+  };
+
   render() {
+    const { showGrammarChecker } = this.state;
+
     return (
       <div>
         <div style={{ display: 'none' }}>
@@ -136,6 +207,12 @@ class MarkdownEditor extends Component {
         <div ref="container">
           <textarea ref="text" />
         </div>
+        {showGrammarChecker && (
+          <GrammarChecker
+            content={this.getCurrentContent()}
+            onJumpTo={this.handleJumpTo}
+          />
+        )}
       </div>
     );
   }

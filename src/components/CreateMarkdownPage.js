@@ -17,6 +17,7 @@ export default function CreateMarkdownPage({
   updateTitle,
   fieldChanged,
   onClickSave,
+  onClickSaveDraft,
   params: { splat },
 }) {
   const metaType = type === 'drafts' ? 'posts' : type;
@@ -46,6 +47,14 @@ export default function CreateMarkdownPage({
             triggered={updated}
             block
           />
+          {onClickSaveDraft && (
+            <Button
+              onClick={onClickSaveDraft}
+              type="saveDraft"
+              active
+              block
+            />
+          )}
         </div>
       </div>
     </HotKeys>
@@ -63,4 +72,5 @@ CreateMarkdownPage.propTypes = {
   updatePath: PropTypes.func.isRequired,
   updateTitle: PropTypes.func.isRequired,
   onClickSave: PropTypes.func.isRequired,
+  onClickSaveDraft: PropTypes.func,
 };

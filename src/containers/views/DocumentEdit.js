@@ -20,6 +20,7 @@ import { updateTitle, updateBody, updatePath } from '../../ducks/metadata';
 import { clearErrors } from '../../ducks/utils';
 import { preventDefault, getDocumentTitle } from '../../utils/helpers';
 import { ADMIN_PREFIX } from '../../constants';
+import { saveDraftFromPost } from '../../ducks/drafts';
 
 import translations from '../../translations';
 const { getLeaveMessage, getDeleteMessage, getNotFoundMessage } = translations;
@@ -66,6 +67,19 @@ export class DocumentEdit extends Component {
       const [directory, ...rest] = params.splat;
       const filename = rest.join('.');
       putDocument(collection, directory, filename);
+    }
+  };
+
+  handleClickSaveDraft = () => {
+    const { saveDraftFromPost, params } = this.props;
+    const collection = params.collection_name;
+    const [directory, ...rest] = params.splat;
+    const filename = rest.join('.');
+    const confirm = window.confirm(
+      'This will save the current post to your drafts folder. Continue?'
+    );
+    if (confirm) {
+      saveDraftFromPost(collection, directory, filename);
     }
   };
 
@@ -154,6 +168,12 @@ export class DocumentEdit extends Component {
               <Button to={http_url} type="view" active block />
               <Splitter />
               <Button
+                onClick={this.handleClickSaveDraft}
+                type="saveDraft"
+                active
+                block
+              />
+              <Button
                 onClick={this.handleClickDelete}
                 type="delete"
                 active
@@ -172,6 +192,7 @@ DocumentEdit.propTypes = {
   fetchDocument: PropTypes.func.isRequired,
   deleteDocument: PropTypes.func.isRequired,
   putDocument: PropTypes.func.isRequired,
+  saveDraftFromPost: PropTypes.func.isRequired,
   updateTitle: PropTypes.func.isRequired,
   updateBody: PropTypes.func.isRequired,
   updatePath: PropTypes.func.isRequired,
@@ -199,6 +220,7 @@ const mapDispatchToProps = dispatch =>
       fetchDocument,
       deleteDocument,
       putDocument,
+      saveDraftFromPost,
       updateTitle,
       updateBody,
       updatePath,

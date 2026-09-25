@@ -144,6 +144,43 @@ export const publishDraft = (directory, filename) => (dispatch, getState) => {
     dispatch
   );
 };
+export const saveDraftFromPost = (collection, directory, filename) => (dispatch, getState) => {
+  const metadata = getState().metadata.metadata;
+  let { path, raw_content, title } = metadata;
+
+  // directory may come in as an array from params.splat — normalise it
+  const dir = Array.isArray(directory)
+    ? directory[0] || ''
+    : directory || '';
+
+  // derive a filename from path or title
+  if ((!path || `${path}/` === dir) && title) {
+    path = `${slugify(title)}.md`;
+  } else {
+    const errors = validatePage(metadata);
+    if (errors.length) {
+      return dispatch(validationError(errors));
+    }
+  }
+
+  dispatch(clearErrors());
+
+  const front_matter = sanitizeFrontMatter(metadata);
+
+  // strip any leading _drafts/ prefix and ensure .md extension
+  let draftFilename = (path || filename || 'draft').replace('_drafts/', '');
+  if (!draftFilename.includes('.')) {
+    draftFilename = `${draftFilename}.md`;
+  }
+
+  return put(
+    draftAPIUrl(dir, draftFilename),
+    preparePayload({ front_matter, raw_content }),
+    { type: PUT_DRAFT_SUCCESS, name: 'draft' },
+    { type: PUT_DRAFT_FAILURE, name: 'error' },
+    dispatch
+  );
+};
 
 // Reducer
 export default function drafts(

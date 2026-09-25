@@ -7,6 +7,7 @@ import DocumentTitle from 'react-document-title';
 import CreateMarkdownPage from '../../components/CreateMarkdownPage';
 import { updateTitle, updateBody, updatePath } from '../../ducks/metadata';
 import { createDocument } from '../../ducks/collections';
+import { saveDraftFromPost } from '../../ducks/drafts';
 import { clearErrors } from '../../ducks/utils';
 import { preventDefault, getDocumentTitle } from '../../utils/helpers';
 import { ADMIN_PREFIX } from '../../constants';
@@ -47,6 +48,13 @@ export class DocumentNew extends Component {
     fieldChanged && createDocument(params.collection_name, params.splat);
   };
 
+  handleClickSaveDraft = e => {
+    preventDefault(e);
+    const { saveDraftFromPost, params } = this.props;
+    const directory = Array.isArray(params.splat) ? params.splat[0] || '' : params.splat || '';
+    saveDraftFromPost(params.collection_name, directory, '');
+  };
+
   render() {
     const {
       params,
@@ -75,6 +83,7 @@ export class DocumentNew extends Component {
           updateTitle={updateTitle}
           fieldChanged={fieldChanged}
           onClickSave={this.handleClickSave}
+          onClickSaveDraft={this.handleClickSaveDraft}
         />
       </DocumentTitle>
     );
@@ -83,6 +92,7 @@ export class DocumentNew extends Component {
 
 DocumentNew.propTypes = {
   createDocument: PropTypes.func.isRequired,
+  saveDraftFromPost: PropTypes.func.isRequired,
   updateTitle: PropTypes.func.isRequired,
   updateBody: PropTypes.func.isRequired,
   updatePath: PropTypes.func.isRequired,
@@ -112,6 +122,7 @@ const mapDispatchToProps = dispatch =>
       updateBody,
       updatePath,
       createDocument,
+      saveDraftFromPost,
       clearErrors,
     },
     dispatch

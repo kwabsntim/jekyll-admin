@@ -117,7 +117,7 @@ export class Sidebar extends Component {
 
     const collectionsPanel = this.renderCollections(hiddenLinks);
     const postsPanel = !hiddenLinks.includes('posts');
-    const draftsPanel = config && config.show_drafts;
+    const draftsPanel = !hiddenLinks.includes('drafts');
 
     return (
       <div className="sidebar">
