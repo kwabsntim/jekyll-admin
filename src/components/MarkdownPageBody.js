@@ -27,6 +27,7 @@ export default function MarkdownPageBody({
         onSave={onSave}
         placeholder="Body"
         initialValue={body}
+        storageKey={path || type}
       />
       <Splitter />
       <Metadata fields={metafields} staticFields={staticmetafields} />
